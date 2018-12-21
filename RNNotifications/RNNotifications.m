@@ -122,7 +122,7 @@ RCT_ENUM_CONVERTER(UIUserNotificationActionBehavior, (@{
     content.userInfo = [RCTConvert NSDictionary:details[@"userInfo"]] ?: @{};
     content.categoryIdentifier = [RCTConvert NSString:details[@"category"]];
 
-    NSString *imageURL = [content.userInfo objectForKey:@"image_url"];
+    NSString *imageURL = [RCTConvert NSString:details[@"imageURL"]];
     if(imageURL) {
       // Perform the download synchronously
       dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);

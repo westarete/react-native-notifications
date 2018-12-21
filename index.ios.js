@@ -206,6 +206,7 @@ export default class NotificationsIOS {
    * - `category`  : The category of this notification, required for actionable notifications (optional).
    * - `userInfo`  : An optional object containing additional notification data.
    * - `fireDate` : The date and time when the system should deliver the notification. if not specified, the notification will be dispatched immediately.
+   * - `imageURL` : URL for an image that will be downloaded and inserted into the notification (optional).
    */
   static localNotification(notification: Object) {
     const notificationId = uuid.v4();
