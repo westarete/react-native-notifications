@@ -122,6 +122,20 @@ RCT_ENUM_CONVERTER(UIUserNotificationActionBehavior, (@{
     content.userInfo = [RCTConvert NSDictionary:details[@"userInfo"]] ?: @{};
     content.categoryIdentifier = [RCTConvert NSString:details[@"category"]];
 
+    NSString *imageURL = [content.userInfo objectForKey:@"image_url"];
+    if(imageURL) {
+      // Perform the download synchronously
+      dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+
+      [self loadAttachmentForUrlString:imageURL
+      completionHandler: ^(UNNotificationAttachment *attachment) {
+        content.attachments = [NSArray arrayWithObjects:attachment, nil];
+        dispatch_semaphore_signal(semaphore);
+      }];
+
+      dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    }
+
     NSDate *triggerDate = [RCTConvert NSDate:details[@"fireDate"]];
     UNCalendarNotificationTrigger *trigger = nil;
     if (triggerDate != nil) {
@@ -137,6 +151,48 @@ RCT_ENUM_CONVERTER(UIUserNotificationActionBehavior, (@{
 
     return [UNNotificationRequest requestWithIdentifier:notificationId
                                                 content:content trigger:trigger];
+}
+
++ (void)loadAttachmentForUrlString:(NSString *)urlString
+                 completionHandler:(void (^)(UNNotificationAttachment *))completionHandler
+{
+    __block UNNotificationAttachment *attachment = nil;
+    __block NSURL *attachmentURL = [NSURL URLWithString:urlString];
+
+    NSString *fileExt = [@"." stringByAppendingString:[urlString pathExtension]];
+
+
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+
+    NSURLSessionDownloadTask *task = [session downloadTaskWithURL:attachmentURL
+                                                completionHandler: ^(NSURL *temporaryFileLocation, NSURLResponse *response, NSError *error) {
+                                                    if (error != nil)
+                                                    {
+                                                        NSLog(@"%@", error.localizedDescription);
+                                                    }
+                                                    else
+                                                    {
+                                                        NSFileManager *fileManager = [NSFileManager defaultManager];
+                                                        NSURL *localURL = [NSURL fileURLWithPath:[temporaryFileLocation.path
+                                                                                                  stringByAppendingString:fileExt]];
+                                                        [fileManager moveItemAtURL:temporaryFileLocation
+                                                                             toURL:localURL
+                                                                             error:&error];
+
+                                                        NSError *attachmentError = nil;
+                                                        attachment = [UNNotificationAttachment attachmentWithIdentifier:[attachmentURL lastPathComponent]
+                                                                                                                    URL:localURL
+                                                                                                                options:nil
+                                                                                                                  error:&attachmentError];
+                                                        if (attachmentError)
+                                                        {
+                                                            NSLog(@"%@", attachmentError.localizedDescription);
+                                                        }
+                                                    }
+                                                    completionHandler(attachment);
+                                                }];
+
+    [task resume];
 }
 @end
 
