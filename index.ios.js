@@ -207,9 +207,11 @@ export default class NotificationsIOS {
    * - `userInfo`  : An optional object containing additional notification data.
    * - `fireDate` : The date and time when the system should deliver the notification. if not specified, the notification will be dispatched immediately.
    * - `imageURL` : URL for an image that will be downloaded and inserted into the notification (optional).
+   *
+   * id (optional) is a string for the desired notification id. If none is provided, a UUID is generated
    */
-  static localNotification(notification: Object) {
-    const notificationId = uuid.v4();
+  static localNotification(notification: Object, id?: String) {
+    const notificationId = id || uuid.v4();
     NativeRNNotifications.localNotification(notification, notificationId);
 
     return notificationId;
