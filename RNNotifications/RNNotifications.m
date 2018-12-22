@@ -674,6 +674,7 @@ RCT_EXPORT_METHOD(cancelLocalNotification:(NSString *)notificationId)
     if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"10")) {
         UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
         [center removePendingNotificationRequestsWithIdentifiers:@[notificationId]];
+        [center removeDeliveredNotificationsWithIdentifiers:@[notificationId]];
     } else {
         for (UILocalNotification* notification in [UIApplication sharedApplication].scheduledLocalNotifications) {
             NSDictionary* notificationInfo = notification.userInfo;
